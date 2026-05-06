@@ -516,8 +516,13 @@ function goHome() {
   /* PKCE: Spotify redirects back with ?code= in the URL query string */
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
-  if (code && CK) {
+  if (code) {
     window.history.replaceState({}, '', window.location.pathname);
+    if (!CK) {
+      // No key saved — go to setup
+      show('s-setup');
+      return;
+    }
     try {
       const token = await exchangeCode(code);
       SP_TOKEN = token;
@@ -525,7 +530,7 @@ function goHome() {
       show('s-intro');
       setTimeout(tw, 300);
     } catch(e) {
-      document.getElementById('setupErr').textContent = 'Spotify login failed: ' + e.message;
+      document.getElementById('setupErr').textContent = 'Spotify login failed: ' + e.message + ' — please try again.';
       document.getElementById('setupErr').style.display = 'block';
       if (CK) document.getElementById('claudeKey').value = CK;
       if (cid) document.getElementById('spotifyId').value = cid;
@@ -534,7 +539,7 @@ function goHome() {
     return;
   }
 
-  /* Already have a saved token */
+  /* Already have a saved token AND a key */
   const savedToken = sessionStorage.getItem('hs_tok') || '';
   if (savedToken && CK) {
     SP_TOKEN = savedToken;
@@ -543,7 +548,8 @@ function goHome() {
     return;
   }
 
-  /* First visit — show setup */
+  /* Always show setup if anything is missing */
+  sessionStorage.clear(); // clear any stale state
   if (CK) document.getElementById('claudeKey').value = CK;
   if (cid) document.getElementById('spotifyId').value = cid;
   show('s-setup');
