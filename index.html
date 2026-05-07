@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hey Spotify</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#1DB954;--gl:#1ed760;--bk:#000;--dk:#121212;
+  --sf:#1a1a1a;--el:#2a2a2a;--li:#3e3e3e;
+  --t1:#fff;--t2:#a7a7a7;--t3:#6a6a6a;
+  --f:'Montserrat',sans-serif;
+  --pad:clamp(20px,5.5vw,32px);
+}
+html{font-size:16px}
+body{background:var(--dk);font-family:var(--f);color:var(--t1);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.screen{display:none;flex-direction:column;min-height:100dvh}
+.screen.active{display:flex}
+
+/* ══ SETUP ══ */
+#s-setup{background:#0a0a0a;align-items:center;justify-content:center;padding:clamp(48px,12vw,72px) var(--pad) 48px;overflow-y:auto}
+.logo{width:clamp(52px,14vw,68px);height:clamp(52px,14vw,68px);border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;margin-bottom:clamp(14px,4vw,22px);flex-shrink:0}
+.logo svg{width:60%;height:60%}
+.setup-h{font-size:clamp(22px,6vw,28px);font-weight:800;letter-spacing:-.5px;text-align:center;line-height:1.15;margin-bottom:8px}
+.setup-h span{color:var(--g)}
+.setup-sub{font-size:clamp(12px,3.4vw,14px);color:var(--t2);text-align:center;line-height:1.6;margin-bottom:clamp(22px,6vw,32px);font-weight:400;max-width:280px}
+
+.step-card{width:100%;background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.18);border-radius:clamp(12px,3vw,16px);padding:clamp(14px,4vw,20px);margin-bottom:clamp(12px,3vw,16px)}
+.step-card-title{font-size:clamp(10px,2.8vw,12px);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g);margin-bottom:12px}
+.step{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.step:last-child{margin-bottom:0}
+.sn{width:clamp(18px,5vw,21px);height:clamp(18px,5vw,21px);border-radius:50%;background:var(--g);color:#000;font-size:clamp(9px,2.4vw,11px);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.st{font-size:clamp(11px,3.1vw,13px);color:var(--t2);line-height:1.55}
+.st a{color:var(--g);font-weight:600;text-decoration:none}
+.st code{background:rgba(255,255,255,.09);color:var(--t1);padding:1px 6px;border-radius:4px;font-size:.88em;font-family:monospace;word-break:break-all}
+
+.field{width:100%;margin-bottom:clamp(10px,3vw,14px)}
+.field-lbl{font-size:clamp(9px,2.6vw,11px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.bdg{background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.3);color:var(--g);font-size:clamp(8px,2.2vw,10px);border-radius:4px;padding:2px 6px;letter-spacing:.04em}
+.inp{width:100%;background:var(--el);border:1.5px solid #333;border-radius:clamp(8px,2vw,12px);padding:clamp(12px,3.2vw,15px) clamp(13px,3.5vw,16px);color:var(--t1);font-family:var(--f);font-size:clamp(13px,3.6vw,15px);font-weight:500;outline:none;transition:border-color .2s;caret-color:var(--g)}
+.inp:focus{border-color:var(--g)}
+.inp::placeholder{color:var(--t3);font-weight:400}
+.hint{font-size:clamp(10px,2.7vw,11px);color:var(--t3);margin-top:6px;line-height:1.5}
+.hint a{color:var(--g);text-decoration:none}
+
+.err{background:#2a1515;border:1px solid #5a2020;border-radius:clamp(8px,2vw,10px);padding:clamp(10px,3vw,13px) clamp(12px,3.5vw,15px);font-size:clamp(11px,3vw,13px);color:#f08080;margin-bottom:10px;font-weight:500;line-height:1.5;display:none}
+
+.btn-g{width:100%;background:var(--g);color:#000;border:none;border-radius:50px;padding:clamp(13px,3.6vw,16px);font-family:var(--f);font-size:clamp(13px,3.8vw,15px);font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-g:hover{background:var(--gl)}
+.btn-g svg{width:18px;height:18px;flex-shrink:0}
+
+/* ══ INTRO ══ */
+#s-intro{background:var(--bk);align-items:center;justify-content:center;flex-direction:column}
+.bwrap{width:min(88%,320px);opacity:0;transform:scale(.88);animation:pop .38s cubic-bezier(.34,1.56,.64,1) .1s forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+.sbar{background:#f0f0f0;border-radius:50px;display:flex;align-items:center;gap:clamp(9px,2.5vw,13px);padding:clamp(10px,2.8vw,14px) clamp(16px,4.5vw,22px) clamp(10px,2.8vw,14px) clamp(10px,2.8vw,14px);box-shadow:0 0 0 2.5px var(--g),0 0 22px 5px rgba(29,185,84,.45),0 0 55px 10px rgba(29,185,84,.18);animation:sg 2s ease-in-out .5s infinite}
+@keyframes sg{0%,100%{box-shadow:0 0 0 2.5px var(--g),0 0 22px 5px rgba(29,185,84,.4),0 0 50px 8px rgba(29,185,84,.16)}50%{box-shadow:0 0 0 2.5px #1ed760,0 0 34px 8px rgba(29,185,84,.62),0 0 80px 16px rgba(29,185,84,.28)}}
+.sico{width:clamp(30px,8.5vw,40px);height:clamp(30px,8.5vw,40px);border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sico svg{width:60%;height:60%}
+#ity{font-size:clamp(17px,5vw,22px);font-weight:700;color:#111;letter-spacing:-.3px;white-space:nowrap;flex:1;overflow:hidden}
+.cur{display:inline-block;width:2px;height:clamp(17px,5vw,22px);background:#111;margin-left:2px;vertical-align:middle;animation:bc .55s step-end .5s infinite;opacity:0}
+@keyframes bc{0%,100%{opacity:1}50%{opacity:0}}
+.isub{margin-top:clamp(22px,6vw,36px);font-size:clamp(9px,2.5vw,11px);letter-spacing:.2em;text-transform:uppercase;color:#3a3a3a;font-weight:500;opacity:0;animation:fu .3s ease .4s forwards}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ HOME ══ */
+#s-home{background:var(--dk);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.hh{padding:clamp(44px,12vw,64px) var(--pad) clamp(16px,4.5vw,22px)}
+.eyebrow{font-size:clamp(9px,2.5vw,11px);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g);margin-bottom:clamp(8px,2.5vw,14px);display:flex;align-items:center;gap:7px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:bl 2s ease-in-out infinite;flex-shrink:0}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+.htitle{font-size:clamp(26px,7.5vw,36px);font-weight:700;line-height:1.12;letter-spacing:-.6px;margin-bottom:clamp(8px,2.5vw,12px)}
+.htitle .acc{color:var(--g)}
+.hbody{font-size:clamp(13px,3.6vw,15px);font-weight:400;line-height:1.6;color:var(--t2)}
+
+.izone{padding:clamp(10px,3vw,18px) var(--pad) clamp(12px,3.5vw,16px)}
+.pill{background:var(--el);border-radius:50px;display:flex;align-items:center;border:1.5px solid transparent;transition:border-color .2s,box-shadow .2s;overflow:hidden}
+.pill:focus-within{border-color:var(--g);box-shadow:0 0 0 1px rgba(29,185,84,.1),0 0 16px rgba(29,185,84,.06)}
+.pill.rec{border-color:#ef4444}
+.pico{width:clamp(26px,7.5vw,34px);height:clamp(26px,7.5vw,34px);border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:clamp(7px,2vw,10px)}
+.pico svg{width:58%;height:58%}
+.ppfx{font-size:clamp(12px,3.4vw,14px);font-weight:500;color:var(--t3);padding:0 0 0 clamp(5px,1.5vw,8px);white-space:nowrap;flex-shrink:0;pointer-events:none;user-select:none}
+.pta{background:none;border:none;outline:none;color:var(--t1);font-family:var(--f);font-size:clamp(13px,3.6vw,15px);font-weight:500;flex:1;padding:clamp(13px,3.5vw,16px) clamp(5px,1.5vw,8px);line-height:1.4;caret-color:var(--g);resize:none;overflow:hidden;height:clamp(48px,13vw,58px)}
+.pta::placeholder{color:var(--t3);font-weight:400;font-style:italic}
+.pacts{display:flex;align-items:center;padding-right:clamp(5px,1.5vw,8px);gap:2px;flex-shrink:0}
+.micbtn{width:clamp(40px,11vw,48px);height:clamp(40px,11vw,48px);border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s;color:var(--t2);flex-shrink:0}
+.micbtn:hover{background:rgba(255,255,255,.08)}
+.micbtn.on{color:#ef4444;animation:mp .9s ease-in-out infinite}
+@keyframes mp{0%,100%{opacity:1}50%{opacity:.55}}
+.micbtn svg{width:clamp(18px,5vw,22px);height:clamp(18px,5vw,22px)}
+.buildbtn{height:clamp(36px,10vw,44px);border-radius:50px;background:var(--g);color:#000;border:none;font-family:var(--f);font-size:clamp(12px,3.2vw,14px);font-weight:700;padding:0 clamp(13px,3.8vw,20px);cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s,transform .1s;white-space:nowrap;flex-shrink:0}
+.buildbtn:hover{background:var(--gl)}
+.buildbtn:active{transform:scale(.96)}
+.buildbtn:disabled{background:rgba(255,255,255,.07);color:var(--t3);cursor:not-allowed}
+.buildbtn svg{width:clamp(11px,3vw,13px);height:clamp(11px,3vw,13px)}
+.vstat{font-size:clamp(10px,2.8vw,12px);font-weight:500;color:var(--t3);padding:clamp(5px,1.5vw,7px) clamp(14px,4vw,18px) 0;min-height:20px}
+.vstat.rec{color:#ef4444}.vstat.ok{color:var(--g)}
+.cct{font-size:clamp(10px,2.8vw,12px);color:var(--t3);padding:3px clamp(14px,4vw,18px) 0;text-align:right}
+
+.exzone{padding:2px var(--pad) clamp(20px,6vw,32px)}
+.exlbl{font-size:clamp(9px,2.5vw,11px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:clamp(6px,2vw,10px)}
+.exlist{display:flex;flex-direction:column;gap:2px}
+.exrow{background:none;border:none;border-radius:clamp(8px,2vw,10px);padding:clamp(9px,2.5vw,12px) clamp(8px,2.5vw,12px);font-family:var(--f);font-size:clamp(12px,3.4vw,14px);font-weight:400;color:var(--t2);cursor:pointer;text-align:left;display:flex;align-items:center;gap:clamp(8px,2.5vw,12px);transition:background .15s,color .15s}
+.exrow:hover{background:var(--sf);color:var(--t1)}
+.exrow svg{width:clamp(14px,4vw,17px);height:clamp(14px,4vw,17px);flex-shrink:0;color:var(--t3)}
+.exrow span{font-style:italic}
+
+/* ══ LOADING ══ */
+#s-loading{background:var(--dk);align-items:center;justify-content:center;flex-direction:column;gap:clamp(18px,5vw,28px);text-align:center;padding:40px var(--pad)}
+.vwrap{position:relative;width:clamp(70px,19vw,90px);height:clamp(70px,19vw,90px)}
+.vinyl{width:100%;height:100%;border-radius:50%;background:conic-gradient(#1f1f1f 0deg,#2a2a2a 60deg,#1f1f1f 120deg,#2a2a2a 180deg,#1f1f1f 240deg,#2a2a2a 300deg,#1f1f1f 360deg);border:2px solid #333;animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vcore{width:36%;height:36%;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:spinr 2s linear infinite}
+@keyframes spinr{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+.vcore svg{width:55%;height:55%}
+.wlbl{font-size:clamp(15px,4.5vw,19px);font-weight:600;color:var(--t1);margin-bottom:5px;letter-spacing:-.2px}
+.wsub{font-size:clamp(12px,3.4vw,14px);font-weight:400;color:var(--t2)}
+.dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--g);margin:0 3px;animation:db 1.4s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes db{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1.2)}}
+
+/* ══ RESULT ══ */
+#s-result{background:var(--dk);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.backbtn{background:none;border:none;color:var(--t2);font-family:var(--f);font-size:clamp(12px,3.4vw,14px);font-weight:500;cursor:pointer;padding:clamp(36px,10vw,52px) var(--pad) clamp(8px,2.5vw,14px);display:flex;align-items:center;gap:6px;transition:color .15s}
+.backbtn:hover{color:var(--t1)}
+.backbtn svg{width:15px;height:15px}
+
+.rcover{margin:0 var(--pad) clamp(12px,3.5vw,18px);border-radius:clamp(10px,2.5vw,14px);overflow:hidden;position:relative;aspect-ratio:1;display:none}
+.rbanner{margin:0 var(--pad) clamp(10px,3vw,14px);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:clamp(8px,2vw,10px);padding:clamp(10px,3vw,13px) clamp(12px,3.5vw,16px);display:none}
+.rbanner.show{display:block;animation:slup .4s cubic-bezier(.22,1,.36,1) .04s both}
+.rbanner-text{font-size:clamp(11px,3vw,12px);color:rgba(255,255,255,.6);line-height:1.6;font-weight:400;font-style:italic}
+.rbanner-text strong{color:rgba(255,255,255,.9);font-weight:600;font-style:normal}
+.arc-lbl{font-size:clamp(9px,2.5vw,10px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:clamp(8px,2.5vw,12px) 0 clamp(6px,2vw,8px)}
+.twhy{font-size:clamp(9px,2.5vw,10px);color:var(--g);font-weight:500;margin-top:2px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcover.show{display:block;animation:slup .4s cubic-bezier(.22,1,.36,1) both}
+.rcvs{position:absolute;inset:0;width:100%;height:100%}
+.rcovlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:clamp(14px,4vw,22px);background:linear-gradient(to top,rgba(0,0,0,.82) 0%,transparent 55%)}
+.rcovtag{font-size:clamp(9px,2.5vw,11px);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g);margin-bottom:5px}
+.rcovname{font-size:clamp(18px,5.2vw,24px);font-weight:700;line-height:1.18;letter-spacing:-.3px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+
+.rbody{padding:0 var(--pad);display:none}
+.rbody.show{display:block;animation:slup .4s cubic-bezier(.22,1,.36,1) .06s both}
+.rdesc{font-size:clamp(12px,3.4vw,14px);font-weight:400;color:var(--t2);line-height:1.55;margin-bottom:clamp(12px,3.5vw,18px)}
+.rdiv{height:1px;background:var(--el);margin-bottom:clamp(10px,3vw,14px)}
+
+.tlist{display:flex;flex-direction:column;margin-bottom:clamp(14px,4vw,22px)}
+.trow{display:flex;align-items:center;gap:clamp(10px,3vw,14px);padding:clamp(8px,2.2vw,11px) clamp(6px,1.5vw,8px);border-radius:clamp(8px,2vw,10px);border-bottom:1px solid rgba(255,255,255,.05);opacity:0;transform:translateY(10px);transition:opacity .28s ease,transform .28s ease,background .15s}
+.trow:last-child{border:none}
+.tnum{width:clamp(16px,4.5vw,20px);text-align:center;font-size:clamp(11px,3vw,12px);color:var(--t3);font-weight:400;flex-shrink:0}
+.tthumb{width:clamp(38px,10.5vw,46px);height:clamp(38px,10.5vw,46px);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,4.5vw,20px);background:var(--el)}
+.tmeta{flex:1;min-width:0}
+.ttitle{font-size:clamp(13px,3.6vw,15px);font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tartist{font-size:clamp(11px,3vw,12px);font-weight:400;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.tdur{font-size:clamp(10px,2.8vw,12px);color:var(--t3);flex-shrink:0;font-weight:400}
+
+.actzone{display:flex;flex-direction:column;gap:clamp(8px,2.2vw,11px);opacity:0;transform:translateY(10px);transition:opacity .3s ease .3s,transform .3s ease .3s}
+.actzone.in{opacity:1;transform:translateY(0)}
+.btn-prim{width:100%;padding:clamp(13px,3.5vw,16px);border-radius:50px;border:none;background:var(--g);color:#000;font-family:var(--f);font-size:clamp(13px,3.6vw,15px);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:clamp(7px,2vw,10px);text-decoration:none;transition:background .15s}
+.btn-prim:hover{background:var(--gl)}
+.btn-prim svg{width:clamp(15px,4.2vw,17px);height:clamp(15px,4.2vw,17px);flex-shrink:0}
+.btn-ghost{background:none;border:1.5px solid var(--li);border-radius:50px;padding:clamp(12px,3.2vw,14px);color:var(--t1);font-family:var(--f);font-size:clamp(12px,3.4vw,14px);font-weight:500;cursor:pointer;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-ghost:hover{border-color:var(--t2)}
+.btn-ghost.done{border-color:var(--t3);color:var(--t3);cursor:default;pointer-events:none}
+.btn-ghost svg{width:14px;height:14px;flex-shrink:0}
+.btn-txt{background:none;border:none;color:var(--t2);font-family:var(--f);font-size:clamp(12px,3.4vw,14px);font-weight:500;cursor:pointer;padding:clamp(8px,2.5vw,11px);width:100%;transition:color .15s}
+.btn-txt:hover{color:var(--t1)}
+
+@keyframes slup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div class="screen active" id="s-setup">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg>
+  </div>
+  <h1 class="setup-h">Hey Spotify<br><span>Beta</span></h1>
+  <p class="setup-sub">Connect your accounts once. Then just speak your moment.</p>
+
+  <div class="step-card">
+    <div class="step-card-title">① Spotify — one-time setup (2 min)</div>
+    <div class="step">
+      <div class="sn">1</div>
+      <div class="st">Go to <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> → log in → <strong>Create App</strong></div>
+    </div>
+    <div class="step">
+      <div class="sn">2</div>
+      <div class="st">In <strong>Redirect URIs</strong> add exactly: <code>https://hey-spotify.onrender.com</code> → click <strong>Add</strong></div>
+    </div>
+    <div class="step">
+      <div class="sn">3</div>
+      <div class="st">Tick <strong>Web API</strong> → Save → copy your <strong>Client ID</strong> and paste below</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-lbl">Spotify Client ID <span class="bdg">Required</span></div>
+    <input class="inp" type="text" id="spotifyId" placeholder="Paste Client ID here" autocomplete="off">
+  </div>
+
+  <div class="field">
+    <div class="field-lbl">Claude API Key <span class="bdg">Required</span></div>
+    <input class="inp" type="password" id="claudeKey" placeholder="sk-ant-api03-…" autocomplete="off">
+    <div class="hint">Free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys</div>
+  </div>
+
+  <div class="err" id="setupErr"></div>
+
+  <button class="btn-g" onclick="connectSpotify()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg>
+    Connect with Spotify
+  </button>
+</div>
+
+<!-- ══ INTRO ══ -->
+<div class="screen" id="s-intro">
+  <div class="bwrap">
+    <div class="sbar">
+      <div class="sico"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg></div>
+      <div id="ity">Hey Spotify,&nbsp;<span class="cur"></span></div>
+    </div>
+  </div>
+  <p class="isub">Private beta</p>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen" id="s-home">
+  <div class="hh">
+    <div class="eyebrow"><span class="dot"></span>Beta access</div>
+    <h1 class="htitle">Tell us what<br>just happened.<br><span class="acc">We'll find<br>the music.</span></h1>
+    <p class="hbody">Speak your moment. Get 5 songs built exactly for right now.</p>
+  </div>
+  <div class="izone">
+    <div class="pill" id="pill">
+      <div class="pico"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg></div>
+      <span class="ppfx">I just…</span>
+      <textarea class="pta" id="ui" placeholder="type or speak" maxlength="200" rows="1"></textarea>
+      <div class="pacts">
+        <button class="micbtn" id="micbtn" onclick="toggleMic()" aria-label="Voice input">
+          <svg id="micsvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="buildbtn" id="buildBtn" onclick="generate()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          Build
+        </button>
+      </div>
+    </div>
+    <div class="vstat" id="vstat"></div>
+    <div class="cct" id="cct"></div>
+  </div>
+  <div class="exzone">
+    <div class="exlbl">Try one of these</div>
+    <div class="exlist">
+      <button class="exrow" onclick="fe('became a dad at 3am.')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>"I just became a dad at 3am."</span></button>
+      <button class="exrow" onclick="fe('got my heart broken again.')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>"I just got my heart broken again."</span></button>
+      <button class="exrow" onclick="fe('quit my job and have no idea what comes next.')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>"I just quit my job — no idea what's next."</span></button>
+      <button class="exrow" onclick="fe('finished my last ever university exam.')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>"I just finished my last university exam."</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOADING ══ -->
+<div class="screen" id="s-loading">
+  <div class="vwrap"><div class="vinyl"><div class="vcore"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg></div></div></div>
+  <div><div class="wlbl" id="loadMsg">Reading your moment…</div><div class="wsub">Finding the right 5 songs</div><div class="dots" style="margin-top:12px"><span></span><span></span><span></span></div></div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div class="screen" id="s-result">
+  <button class="backbtn" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Start over</button>
+  <div class="rcover" id="rcover"><canvas class="rcvs" id="rcvs"></canvas><div class="rcovlay"><div class="rcovtag" id="rcovtag"></div><div class="rcovname" id="rcovname"></div></div></div>
+  <div class="rbanner" id="rbanner"><div class="rbanner-text" id="rbannertext"></div></div>
+  <div class="rbody" id="rbody">
+    <p class="rdesc" id="rdesc"></p>
+    <div class="rdiv"></div>
+    <div class="arc-lbl" id="arc1lbl"></div>
+    <div class="tlist" id="tlist1"></div>
+    <div class="arc-lbl" id="arc2lbl" style="margin-top:4px"></div>
+    <div class="tlist" id="tlist2"></div>
+    <div class="actzone" id="actzone"></div>
+  </div>
+</div>
+
+<script>
+/* ── CONFIG — hardcoded to your Render URL ── */
+const REDIRECT_URI = 'https://hey-spotify.onrender.com';
+
+/* ── STATE ── */
+let CK = '', SP_TOKEN = '', recog = null, isListening = false, loadTimer;
+
+const COVERS = [
+  {c1:'#0a3d20',c2:'#031a0d',acc:'#1DB954'},
+  {c1:'#1a0a30',c2:'#0a0318',acc:'#a855f7'},
+  {c1:'#3d0a0a',c2:'#180303',acc:'#ef4444'},
+  {c1:'#0a1e3d',c2:'#030b18',acc:'#3b82f6'},
+  {c1:'#2e2000',c2:'#120c00',acc:'#f59e0b'},
+];
+const LMSGS = ['Reading your moment…','Feeling the emotion…','Searching Spotify…','Curating your 5 songs…','Almost there…'];
+const SPSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.963a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.114a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 01-.97-.519.78.78 0 01.519-.97c3.632-1.102 8.147-.568 11.233 1.326a.78.78 0 01.255 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.333a.937.937 0 01-.955 1.618z"/></svg>';
+
+/* ── SCREENS ── */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function setVS(m, c) { const e = document.getElementById('vstat'); e.textContent = m; e.className = 'vstat' + (c ? ' ' + c : ''); }
+function msToMin(ms) { const s = Math.floor(ms/1000); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+
+/* ── PKCE HELPERS ── */
+async function pkceVerifier() {
+  const arr = new Uint8Array(64);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function pkceChallenge(v) {
+  const data = new TextEncoder().encode(v);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+/* ── SPOTIFY CONNECT (PKCE) ── */
+async function connectSpotify() {
+  const cid = document.getElementById('spotifyId').value.trim();
+  const ck  = document.getElementById('claudeKey').value.trim();
+  const err = document.getElementById('setupErr');
+  if (!cid) { err.textContent = 'Please enter your Spotify Client ID.'; err.style.display = 'block'; return; }
+  if (!ck || !ck.startsWith('sk-ant-')) { err.textContent = 'Please enter a valid Claude API key (starts with sk-ant-).'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  sessionStorage.setItem('hs_ck', ck);
+  sessionStorage.setItem('hs_cid', cid);
+  const verifier = await pkceVerifier();
+  const challenge = await pkceChallenge(verifier);
+  sessionStorage.setItem('hs_v', verifier);
+  const params = new URLSearchParams({
+    client_id: cid,
+    response_type: 'code',
+    redirect_uri: REDIRECT_URI,
+    scope: 'playlist-modify-public playlist-modify-private',
+    code_challenge_method: 'S256',
+    code_challenge: challenge,
+  });
+  window.location.href = 'https://accounts.spotify.com/authorize?' + params.toString();
+}
+
+/* ── EXCHANGE CODE FOR TOKEN ── */
+async function exchangeCode(code) {
+  const cid      = sessionStorage.getItem('hs_cid') || '';
+  const verifier = sessionStorage.getItem('hs_v')   || '';
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      client_id: cid,
+      code_verifier: verifier,
+    }),
+  });
+  if (!r.ok) throw new Error('Token exchange failed ' + r.status);
+  const d = await r.json();
+  return d.access_token;
+}
+
+/* ── SPOTIFY API ── */
+async function spFetch(path, opts = {}) {
+  const r = await fetch('https://api.spotify.com/v1' + path, {
+    ...opts,
+    cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + SP_TOKEN, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error('Spotify ' + r.status + ': ' + errText);
+  }
+  if (r.status === 204 || r.status === 304) return null;
+  const text = await r.text();
+  return text ? JSON.parse(text) : null;
+}
+async function spSearch(q) { const d = await spFetch('/search?q=' + encodeURIComponent(q) + '&type=track&limit=1'); return d?.tracks?.items?.[0] || null; }
+async function spGetUser() {
+  /* Force fresh — avoid 304 cached empty response */
+  const r = await fetch('https://api.spotify.com/v1/me?t=' + Date.now(), {
+    cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + SP_TOKEN }
+  });
+  if (!r.ok) throw new Error('Spotify /me ' + r.status);
+  return r.json();
+}
+async function spCreatePlaylist(uid, name, desc) { return spFetch('/users/' + uid + '/playlists', { method: 'POST', body: JSON.stringify({ name, description: desc, public: false }) }); }
+async function spAddTracks(pid, uris) { return spFetch('/playlists/' + pid + '/tracks', { method: 'POST', body: JSON.stringify({ uris }) }); }
+async function spFollow(pid) {
+  await fetch('https://api.spotify.com/v1/playlists/' + pid + '/followers', {
+    method: 'PUT', headers: { Authorization: 'Bearer ' + SP_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ public: false })
+  });
+}
+
+/* ── CLAUDE ── */
+async function askClaude(moment) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': CK, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001', max_tokens: 1400,
+      messages: [{ role: 'user', content: `You are the "Hey Spotify" AI. User said: "Hey Spotify, I just ${moment}"\n\nReturn ONLY valid JSON, no markdown:\n{\n  "playlistName":"poetic 3-6 word name",\n  "description":"1-2 sentences that speak directly to THIS specific moment, max 110 chars",\n  "momentTag":"2-3 word label",\n  "contextBanner":"1 sentence acknowledging the specific emotional nuance of what they said — what makes THIS moment distinct",\n  "palette":0,\n  "arc1Label":"3-5 word label for first emotional phase",\n  "arc2Label":"3-5 word label for second emotional phase",\n  "tracks":[{"title":"","artist":"","searchQuery":"Title Artist","emoji":"🎵","why":"one short line: why THIS song for THIS specific moment"}]\n}\npalette: 0=hopeful 1=melancholic 2=heartbreak 3=calm 4=nostalgia.\nExactly 10 real Spotify tracks. First 5 = arc1 (first emotional phase). Last 5 = arc2 (second phase).\nThe \"why\" for each track must reference the specific moment, not generic emotion.\nMake each track feel chosen for THIS person in THIS situation.` }]
+    })
+  });
+  if (!r.ok) throw new Error('Claude ' + r.status);
+  const d = await r.json();
+  return JSON.parse((d.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
+}
+
+/* ── COVER ── */
+function drawCover(el, idx) {
+  const s = el.offsetWidth || 300; el.width = s; el.height = s;
+  const ctx = el.getContext('2d'), p = COVERS[idx || 0];
+  const g = ctx.createLinearGradient(0, 0, s, s);
+  g.addColorStop(0, p.c1); g.addColorStop(1, p.c2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+  ctx.globalAlpha = .14;
+  for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.arc(Math.random()*s, Math.random()*s, 20+Math.random()*s*.3, 0, Math.PI*2); ctx.fillStyle = p.acc; ctx.fill(); }
+  ctx.globalAlpha = 1;
+}
+
+/* ── INPUT ── */
+const ui = document.getElementById('ui');
+const buildBtn = document.getElementById('buildBtn');
+ui.addEventListener('input', () => {
+  const l = ui.value.length;
+  document.getElementById('cct').textContent = l > 0 ? l + ' / 200' : '';
+  buildBtn.disabled = ui.value.trim().length < 3;
+});
+buildBtn.disabled = true;
+function fe(t) { ui.value = t; ui.dispatchEvent(new Event('input')); ui.focus(); }
+
+/* ── VOICE ── */
+function toggleMic() {
+  if (isListening) { stopMic(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setVS('Voice not supported in this browser'); setTimeout(() => setVS(''), 2500); return; }
+  recog = new SR(); recog.lang = 'en-US'; recog.continuous = false; recog.interimResults = true;
+  recog.onstart = () => { isListening = true; document.getElementById('micbtn').classList.add('on'); document.getElementById('micsvg').style.stroke = '#ef4444'; document.getElementById('pill').classList.add('rec'); setVS('Listening…', 'rec'); };
+  recog.onresult = (e) => { let f='',x=''; for(let i=e.resultIndex;i<e.results.length;i++) e.results[i].isFinal?f+=e.results[i][0].transcript:x+=e.results[i][0].transcript; ui.value=(f||x).trim(); ui.dispatchEvent(new Event('input')); };
+  recog.onspeechend = () => recog.stop();
+  recog.onend = () => { isListening=false; document.getElementById('micbtn').classList.remove('on'); document.getElementById('micsvg').style.stroke=''; document.getElementById('pill').classList.remove('rec'); if(ui.value.trim().length>2){setVS('Got it!','ok');setTimeout(()=>setVS(''),1800);}else setVS(''); };
+  recog.onerror = (e) => { stopMic(); const m={'not-allowed':'Mic access denied.','no-speech':'No speech detected.','network':'Network error.'}; setVS(m[e.error]||'Could not hear you.'); setTimeout(()=>setVS(''),2500); };
+  recog.start();
+}
+function stopMic() { if(recog){try{recog.stop();}catch(e){}} isListening=false; document.getElementById('micbtn').classList.remove('on'); document.getElementById('micsvg').style.stroke=''; document.getElementById('pill').classList.remove('rec'); }
+
+/* ── INTRO TYPEWRITER ── */
+const PHRASE = 'Hey Spotify, I just…';
+let twIdx = 0;
+const typed = document.getElementById('ity');
+function tw() { twIdx++; typed.innerHTML = PHRASE.slice(0,twIdx) + '<span class="cur"></span>'; twIdx < PHRASE.length ? setTimeout(tw, 52) : setTimeout(() => show('s-home'), 650); }
+
+/* ── GENERATE ── */
+async function generate() {
+  const moment = ui.value.trim(); if (!moment) return;
+  stopMic(); show('s-loading');
+  let i = 0; document.getElementById('loadMsg').textContent = LMSGS[0];
+  loadTimer = setInterval(() => { i = (i+1) % LMSGS.length; document.getElementById('loadMsg').textContent = LMSGS[i]; }, 2100);
+  try {
+    const meta = await askClaude(moment);
+    const resolved = [], uris = [];
+    for (const t of (meta.tracks || [])) {
+      const track = await spSearch(t.searchQuery || t.title + ' ' + t.artist);
+      if (track) { uris.push(track.uri); resolved.push({ title: track.name, artist: track.artists.map(a=>a.name).join(', '), duration: msToMin(track.duration_ms), emoji: t.emoji || '♫' }); }
+      else resolved.push({ title: t.title, artist: t.artist, duration: '—', emoji: t.emoji || '♫' });
+    }
+    let plUrl = null, plId = null;
+    if (uris.length) {
+      const user = await spGetUser();
+      const pl = await spCreatePlaylist(user.id, meta.playlistName, meta.description);
+      if (pl.id) { await spAddTracks(pl.id, uris); plUrl = pl.external_urls?.spotify; plId = pl.id; }
+    }
+    clearInterval(loadTimer);
+    render(meta, resolved, plUrl, plId);
+  } catch(e) {
+    clearInterval(loadTimer);
+    show('s-home');
+    const msg = e.message || 'Unknown error';
+    setVS('Error: ' + msg, 'rec');
+    // Also show a persistent alert so we can see the full error
+    setTimeout(() => {
+      alert('DEBUG ERROR:\n' + msg + '\n\nCheck: API key valid? Credits loaded? Spotify connected?');
+    }, 300);
+  }
+}
+
+function render(meta, tracks, plUrl, plId) {
+  /* Cover */
+  const rc = document.getElementById('rcover');
+  rc.classList.remove('show'); rc.style.display = 'block'; void rc.offsetWidth; rc.classList.add('show');
+  setTimeout(() => drawCover(document.getElementById('rcvs'), meta.palette || 0), 60);
+  document.getElementById('rcovtag').textContent = meta.momentTag || '';
+  document.getElementById('rcovname').textContent = meta.playlistName || 'Your Playlist';
+
+  /* Context banner */
+  if (meta.contextBanner) {
+    const rb2 = document.getElementById('rbanner');
+    document.getElementById('rbannertext').innerHTML = meta.contextBanner;
+    rb2.classList.remove('show'); rb2.style.display = 'block'; void rb2.offsetWidth; rb2.classList.add('show');
+  }
+
+  /* Body */
+  const rb = document.getElementById('rbody');
+  rb.classList.remove('show'); rb.style.display = 'block'; void rb.offsetWidth; rb.classList.add('show');
+  document.getElementById('rdesc').textContent = meta.description || '';
+
+  /* Arc labels */
+  document.getElementById('arc1lbl').textContent = meta.arc1Label || 'First listen';
+  document.getElementById('arc2lbl').textContent = meta.arc2Label || 'Let it shift';
+
+  /* Split tracks into two arcs of 5 */
+  const arc1 = tracks.slice(0, 5);
+  const arc2 = tracks.slice(5, 10);
+
+  function buildTrackList(listId, trackArr, offset) {
+    const tl = document.getElementById(listId); tl.innerHTML = '';
+    trackArr.forEach((t, i) => {
+      const el = document.createElement('div'); el.className = 'trow';
+      const whyHtml = t.why ? '<div class="twhy">' + t.why + '</div>' : '';
+      el.innerHTML = '<span class="tnum">'+(offset+i+1)+'</span><div class="tthumb">'+t.emoji+'</div><div class="tmeta"><div class="ttitle">'+t.title+'</div><div class="tartist">'+t.artist+'</div>'+whyHtml+'</div><span class="tdur">'+t.duration+'</span>';
+      tl.appendChild(el);
+      setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 80 + (offset+i)*65);
+    });
+  }
+  buildTrackList('tlist1', arc1, 0);
+  buildTrackList('tlist2', arc2, 5);
+
+  /* Actions */
+  const az = document.getElementById('actzone'); az.innerHTML = '';
+  if (plUrl) {
+    const a = document.createElement('a'); a.href = plUrl; a.target = '_blank'; a.className = 'btn-prim';
+    a.innerHTML = SPSVG + 'Open in Spotify'; az.appendChild(a);
+  }
+  if (plId) {
+    const ab = document.createElement('button'); ab.className = 'btn-ghost';
+    ab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add to my library';
+    ab.onclick = async () => { ab.classList.add('done'); ab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Saved to library'; try { await spFollow(plId); } catch(e) {} };
+    az.appendChild(ab);
+  }
+  const sb = document.createElement('button'); sb.className = 'btn-txt'; sb.textContent = 'Start over'; sb.onclick = goHome; az.appendChild(sb);
+  show('s-result');
+  setTimeout(() => az.classList.add('in'), 300);
+}
+
+function goHome() {
+  stopMic(); clearInterval(loadTimer); show('s-home');
+  ui.value = ''; ui.dispatchEvent(new Event('input')); setVS('');
+  ['tlist1','tlist2'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+  document.getElementById('actzone').innerHTML = '';
+  document.getElementById('actzone').classList.remove('in');
+  const rc = document.getElementById('rcover'), rb = document.getElementById('rbody');
+  rc.classList.remove('show'); rc.style.display = 'none';
+  rb.classList.remove('show'); rb.style.display = 'none';
+  const ban = document.getElementById('rbanner');
+  ban.classList.remove('show'); ban.style.display = 'none';
+}
+
+/* ══ INIT ══ */
+(async function init() {
+  CK = sessionStorage.getItem('hs_ck') || '';
+  const cid = sessionStorage.getItem('hs_cid') || '';
+
+  /* PKCE: Spotify redirects back with ?code= */
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    window.history.replaceState({}, '', window.location.pathname);
+    sessionStorage.removeItem('hs_tok');
+    if (CK) document.getElementById('claudeKey').value = CK;
+    if (cid) document.getElementById('spotifyId').value = cid;
+    document.getElementById('setupErr').textContent = 'Spotify auth error: ' + error;
+    document.getElementById('setupErr').style.display = 'block';
+    show('s-setup');
+    return;
+  }
+
+  if (code) {
+    window.history.replaceState({}, '', window.location.pathname);
+    if (!CK) { show('s-setup'); return; }
+    try {
+      const token = await exchangeCode(code);
+      if (!token) throw new Error('No token returned');
+      SP_TOKEN = token;
+      /* Store token with timestamp so we can detect expiry (1hr) */
+      sessionStorage.setItem('hs_tok', token);
+      sessionStorage.setItem('hs_tok_ts', Date.now().toString());
+      show('s-intro');
+      setTimeout(tw, 300);
+    } catch(e) {
+      sessionStorage.removeItem('hs_tok');
+      document.getElementById('setupErr').textContent = 'Spotify login failed: ' + e.message;
+      document.getElementById('setupErr').style.display = 'block';
+      if (CK) document.getElementById('claudeKey').value = CK;
+      if (cid) document.getElementById('spotifyId').value = cid;
+      show('s-setup');
+    }
+    return;
+  }
+
+  /* Check if saved token is still fresh (Spotify tokens last 1 hour) */
+  const savedToken = sessionStorage.getItem('hs_tok') || '';
+  const savedTs = parseInt(sessionStorage.getItem('hs_tok_ts') || '0');
+  const tokenAge = Date.now() - savedTs;
+  const TOKEN_MAX_AGE = 55 * 60 * 1000; /* 55 minutes */
+
+  if (savedToken && CK && tokenAge < TOKEN_MAX_AGE) {
+    SP_TOKEN = savedToken;
+    show('s-intro');
+    setTimeout(tw, 300);
+    return;
+  }
+
+  /* Token missing, stale, or no keys — clear and show setup */
+  sessionStorage.removeItem('hs_tok');
+  sessionStorage.removeItem('hs_tok_ts');
+  if (CK) document.getElementById('claudeKey').value = CK;
+  if (cid) document.getElementById('spotifyId').value = cid;
+  show('s-setup');
+})();
+</script>
+</body>
+</html>
